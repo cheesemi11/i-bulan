@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이불;안 - 기숙사형 학교 이불안방 지도</title>
+
+    <!-- 1. 글씨체 설정: Hamlet 폰트 우선 적용, 없을 경우 Gowun Dodum 웹 폰트 적용 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap">
+    <!-- FontAwesome 아이콘 라이브러리 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 2. CSS 스타일시트 (어두운 초록색 테마 및 2분할 레이아웃 적용) -->
+    <style>
+        /* 변수 선언: 어두운 초록색 메인 테마 색상 */
+        :root {
+            --primary-dark-green: #1b4332;
+            --secondary-green: #2d6a4f;
+            --accent-green: #40916c;
+            --light-green-bg: #f4f9f6;
+            --border-green: #d8e3dd;
+            --text-main: #1d2d24;
+            --text-muted: #5c7065;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, input, button {
+            font-family: 'hamlet', 'Gowun Dodum', sans-serif;
+            color: var(--text-main);
+        }
+
+        /* 2분할 레이아웃 컨테이너 */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 왼쪽 사이드바 (검색창 + 결과 리스트 + 탭) */
+        .sidebar {
+            width: 400px;
+            min-width: 340px;
+            height: 100%;
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-green);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+
+        /* 상단 헤더 */
+        .sidebar-header {
+            background-color: var(--primary-dark-green);
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.85rem;
+            margin-top: 6px;
+            opacity: 0.9;
+        }
+
+        /* 탭 버튼 내비게이션 */
+        .tab-nav {
+            display: flex;
+            background-color: #e9f0ec;
+            border-bottom: 1px solid var(--border-green);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px 10px;
+            border: none;
+            background: none;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn i {
+            color: var(--text-muted);
+        }
+
+        .tab-btn.active {
+            background-color: #ffffff;
+            color: var(--primary-dark-green);
+            border-bottom: 3px solid var(--primary-dark-green);
+        }
+
+        .tab-btn.active i {
+            color: var(--primary-dark-green);
+        }
+
+        /* 탭 콘텐츠 영역 */
+        .tab-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* 검색창 영역 */
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 1.5px solid var(--border-green);
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .search-box input:focus {
+            border-color: var(--secondary-green);
+        }
+
+        .search-box button {
+            background-color: var(--primary-dark-green);
+            color: white;
+            border: none;
+            padding: 0 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .search-box button:hover {
+            background-color: var(--secondary-green);
+        }
+
+        /* 태그 추천 검색 */
+        .quick-tags {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background-color: var(--light-green-bg);
+            border: 1px solid var(--border-green);
+            color: var(--primary-dark-green);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            background-color: var(--secondary-green);
+            color: white;
+        }
+
+        /* 검색 결과 목록 스타일 */
+        .result-header {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .place-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .place-item {
+            border: 1px solid var(--border-green);
+            border-radius: 8px;
+            padding: 14px;
+            cursor: pointer;
+            background-color: #ffffff;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .place-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(27, 67, 50, 0.1);
+            border-color: var(--secondary-green);
+        }
+
+        .place-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .place-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: var(--primary-dark-green);
+        }
+
+        .place-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .badge-installed {
+            background-color: #d8f3dc;
+            color: #1b4332;
+            border: 1px solid #74c69d;
+        }
+
+        .badge-normal {
+            background-color: #f0f0f0;
+            color: #666666;
+        }
+
+        .place-address {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* 탭 2: 사이트 연결 영역 카드 */
+        .site-link-card {
+            background: linear-gradient(145deg, #ffffff, var(--light-green-bg));
+            border: 1.5px solid var(--border-green);
+            border-radius: 12px;
+            padding: 28px 20px;
+            text-align: center;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            color: var(--primary-dark-green);
+            margin-bottom: 16px;
+        }
+
+        .site-link-card h3 {
+            color: var(--primary-dark-green);
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .site-link-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .site-connect-btn {
+            width: 100%;
+            background-color: var(--primary-dark-green);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .site-connect-btn:hover {
+            background-color: var(--secondary-green);
+        }
+
+        /* 오른쪽 지도 영역 */
+        .map-container {
+            flex: 1;
+            height: 100%;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 현재 위치 버튼 */
+        .my-location-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            z-index: 5;
+            background-color: var(--primary-dark-green);
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .my-location-btn:hover {
+            transform: scale(1.08);
+            background-color: var(--secondary-green);
+        }
+
+        /* 지도 인포윈도우 커스텀 스타일 */
+        .custom-overlay {
+            background-color: white;
+            border: 2px solid var(--primary-dark-green);
+            border-radius: 8px;
+            padding: 10px 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--primary-dark-green);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- 3. 왼쪽 영역: 검색창 및 결과 리스트 / 탭 -->
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <h1><i class="fa-solid fa-couch"></i> 이불;안</h1>
+                <p>불안해소부스 '이불안방' 위치 안내 시스템</p>
+            </header>
+
+            <!-- 탭 버튼 -->
+            <nav class="tab-nav">
+                <button class="tab-btn active" id="tab1-btn" onclick="switchTab('tab1')">
+                    <i class="fa-solid fa-magnifying-glass-location"></i> 주변 이불안방 검색
+                </button>
+                <button class="tab-btn" id="tab2-btn" onclick="switchTab('tab2')">
+                    <i class="fa-solid fa-link"></i> 사이트 연결하기
+                </button>
+            </nav>
+
+            <!-- 탭 1: 주변 이불안방 검색하기 -->
+            <section id="tab1-content" class="tab-content active">
+                <div class="search-box">
+                    <input type="text" id="keyword-input" placeholder="학교, 역, 공공시설 검색 (예: 고양국제고)" onkeyup="if(event.key==='Enter') executeSearch()">
+                    <button onclick="executeSearch()">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+
+                <div class="quick-tags">
+                    <span class="tag" onclick="filterByTag('all')">전체</span>
+                    <span class="tag" onclick="filterByTag('installed')">🛋️ 이불안방 설치 학교</span>
+                    <span class="tag" onclick="filterByTag('dorm')">🏫 기숙사 학교 전체</span>
+                    <span class="tag" onclick="filterByTag('public')">🚉 공공시설/지하철</span>
+                </div>
+
+                <div class="result-header">
+                    <span id="result-count">목록 (클릭시 위치 이동)</span>
+                </div>
+
+                <ul id="place-list" class="place-list">
+                    <!-- 자바스크립트로 동적 생성됨 -->
+                </ul>
+            </section>
+
+            <!-- 탭 2: 이불안방 사이트 연결하기 -->
+            <section id="tab2-content" class="tab-content">
+                <div class="site-link-card">
+                    <div class="card-icon">
+                        <i class="fa-solid fa-couch"></i>
+                    </div>
+                    <h3>프로젝트 기업 '이불;안'</h3>
+                    <p>고등학생의 학업 스트레스 및 불안 해소를 위한 독립 부스 '이불안방' 공식 홈페이지 연결 서비스입니다.</p>
+                    <button class="site-connect-btn" onclick="handleSiteConnect()">
+                        <i class="fa-solid fa-paper-plane"></i> 이불안방 사이트 연결하기
+                    </button>
+                </div>
+            </section>
+        </aside>
+
+        <!-- 4. 오른쪽 영역: 카카오 지도 -->
+        <main class="map-container">
+            <div id="map"></div>
+            <button class="my-location-btn" onclick="moveToCurrentLocation()" title="내 위치로 이동">
+                <i class="fa-solid fa-crosshairs"></i>
+            </button>
+        </main>
+    </div>
+
+    <!-- 5. 카카오 지도 JavaScript SDK (libraries=services 포함) -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=aaa8e4a09a8583714b45fa5ebf4aab04&libraries=services"></script>
+
+    <!-- 6. 메인 자바스크립트 로직 -->
+    <script>
+        // 전역 변수 선언 (영어 변수명 사용)
+        let kakaoMap = null;
+        let mapMarkers = [];
+        let placesService = null;
+        let activeOverlay = null;
+
+        // 경기도 기숙사형 학교 현황 데이터 (엑셀 데이터 기반 및 주요 장소 목록)
+        const dormitorySchools = [
+            { name: "고양국제고등학교", category: "기숙사학교", installed: true, lat: 37.6974, lng: 126.8041, address: "경기도 고양시 일산동구 위시티1로 27" },
+            { name: "양서고등학교", category: "기숙사학교", installed: true, lat: 37.5451, lng: 127.3204, address: "경기도 양평군 양서면 목왕로 28" },
+            { name: "청심국제고등학교", category: "기숙사학교", installed: false, lat: 37.7126, lng: 127.4789, address: "경기도 가평군 설악면 미사리로 324-226" },
+            { name: "경기외국어고등학교", category: "기숙사학교", installed: false, lat: 37.3592, lng: 126.9648, address: "경기도 의왕시 고산로 105" },
+            { name: "성남외국어고등학교", category: "기숙사학교", installed: false, lat: 37.3872, lng: 127.1472, address: "경기도 성남시 분당구 안골로 48" },
+            { name: "동두천외국어고등학교", category: "기숙사학교", installed: false, lat: 37.9145, lng: 127.0658, address: "경기도 동두천시 지행로 123" },
+            { name: "김포외국어고등학교", category: "기숙사학교", installed: false, lat: 37.6698, lng: 126.5492, address: "경기도 김포시 월곶면 애기봉평화로 171" },
+            { name: "가평고등학교", category: "기숙사학교", installed: false, lat: 37.8285, lng: 127.5142, address: "경기도 가평군 가평읍 문화로 70" },
+            { name: "진성고등학교", category: "기숙사학교", installed: false, lat: 37.4715, lng: 126.8655, address: "경기도 광명시 오리로 748" },
+            { name: "와부고등학교", category: "기숙사학교", installed: false, lat: 37.5879, lng: 127.2185, address: "경기도 남양주시 와부읍 덕소로 222" },
+            { name: "정발산역 (3호선)", category: "지하철역", installed: false, lat: 37.6595, lng: 126.7725, address: "경기도 고양시 일산동구 중앙로 1270" },
+            { name: "양수역 (경의중앙선)", category: "지하철역", installed: false, lat: 37.5457, lng: 127.3274, address: "경기도 양평군 양서면 용담길 34" },
+            { name: "고양시청", category: "공공시설", installed: false, lat: 37.6584, lng: 126.8320, address: "경기도 고양시 덕양구 고양시청로 10" },
+            { name: "양평군청", category: "공공시설", installed: false, lat: 37.4917, lng: 127.4876, address: "경기도 양평군 양평읍 군청길 2" }
+        ];
+
+        // 페이지 로드 완료 시 지도가 안전하게 로드된 후 실행
+        kakao.maps.load(function () {
+            initializeMap();
+        });
+
+        // 지도 초기화 함수
+        function initializeMap() {
+            const mapContainer = document.getElementById('map');
+            
+            // 기본 지도 옵션 설정 (초기 중심 좌표: 고양국제고등학교 기준, 확대 레벨 5)
+            const defaultPosition = new kakao.maps.LatLng(37.6974, 126.8041);
+            const mapOptions = {
+                center: defaultPosition,
+                level: 5 // 요구사항: 지도 확대 레벨 5
+            };
+
+            // 카카오 지도 객체 생성
+            kakaoMap = new kakao.maps.Map(mapContainer, mapOptions);
+            placesService = new kakao.maps.services.Places();
+
+            // 위치 권한을 받아서 현재 위치를 중심 지도에 표시
+            requestUserLocation();
+
+            // 초기 장소 목록 및 마커 표시
+            renderPlaceList(dormitorySchools);
+            displayMarkers(dormitorySchools);
+        }
+
+        // 사용자의 현재 위치를 받아오는 함수
+        function requestUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        const currentPosition = new kakao.maps.LatLng(latitude, longitude);
+
+                        // 지도의 중심을 현재 위치로 이동
+                        kakaoMap.setCenter(currentPosition);
+
+                        // 현재 위치 표시용 마커 생성
+                        new kakao.maps.Marker({
+                            map: kakaoMap,
+                            position: currentPosition,
+                            title: "
